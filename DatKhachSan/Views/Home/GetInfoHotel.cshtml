@@ -1,0 +1,728 @@
+﻿@model dynamic
+@{
+    Layout = "~/Views/Shared/GetHotels_Layout.cshtml";
+    ViewData["Title"] = "Hotels";
+}
+<script type="text/javascript">
+        function showPopup() {
+            document.getElementById("popup").style.display = "block";
+        }
+
+        function hidePopup() {
+            document.getElementById("popup").style.display = "none";
+        }
+        function thongbao(noidungthongbao) {
+            document.getElementById('noidungthongbao').innerHTML = noidungthongbao;
+            showPopup();
+        }
+    </script>
+    <link rel="stylesheet" href="https://cdnjs.cloudflare.com/ajax/libs/rateYo/2.3.2/jquery.rateyo.min.css">
+    <link rel="stylesheet" href="~/css/popUp.css" />
+    <style>
+        .hotel-info {
+            margin: 20px;
+            font-family: Arial, sans-serif;
+            max-width: 600px;
+            background-color: #f2f2f2;
+            padding: 20px;
+            border-radius: 10px;
+            box-shadow: 0px 2px 5px rgba(0, 0, 0, 0.1);
+        }
+
+            .hotel-info h2 {
+                font-size: 24px;
+                margin-bottom: 10px;
+                color: #7fc142;
+                font-weight: bolder;
+            }
+
+            .hotel-info p {
+                font-size: 16px;
+                line-height: 1.5;
+            }
+
+            .hotel-info .photos {
+                display: flex;
+                flex-wrap: wrap;
+                justify-content: center;
+            }
+
+                .hotel-info .photos img {
+                    width: 150px;
+                    height: 150px;
+                    margin: 10px;
+                    object-fit: cover;
+                    border-radius: 5px;
+                    box-shadow: 0px 2px 5px rgba(0, 0, 0, 0.1);
+                    transition: transform 0.3s ease;
+                }
+
+                    .hotel-info .photos img:hover {
+                        transform: scale(1.1);
+                    }
+
+            .hotel-info .reviews .review {
+                margin-bottom: 20px;
+                padding-bottom: 10px;
+                border-bottom: 1px solid #ccc;
+            }
+
+                .hotel-info .reviews .review:last-child {
+                    margin-bottom: 0;
+                    border-bottom: none;
+                }
+
+                .hotel-info .reviews .review h3 {
+                    font-size: 18px;
+                    margin-bottom: 5px;
+                }
+
+                .hotel-info .reviews .review p {
+                    font-size: 14px;
+                    line-height: 1.3;
+                }
+
+                .hotel-info .reviews .review .author {
+                    margin-top: 5px;
+                    font-size: 12px;
+                    color: deeppink;
+                }
+
+                .hotel-info .reviews .review .rating {
+                    margin-top: 10px;
+                }
+
+    .ratingRateYo {
+        margin-left: 0;
+        padding-left: 0;
+    }
+
+    .user_ratings_total {
+        color: #ffc107;
+    }
+
+    .jq-ry-container {
+        padding: 0 0px;
+        display: inline-flex;
+        margin-top: 0px;
+    }
+
+    .relative_time_description {
+        float: right;
+        font-size: 13px;
+        font-style: italic;
+    }
+
+    .avata-review {
+        margin-top: 5px;
+        max-width: 70px;
+    }
+    /*vvvvvvv*/
+    .booking-form {
+    position: absolute;
+    top: 32.7vh;
+    background-color: #f2f2f2;
+    border-radius: 10px;
+    box-shadow: 0px 2px 5px rgba(0, 0, 0, 0.1);
+    left: 640px;
+    width: calc(100vw - 660px);
+}
+
+.booking-form h3 {
+        font-size: 30px;
+        text-align: center;
+        margin: 30px;
+        color: #7fc142;
+}
+
+.booking-form .form-group {
+    margin-bottom: 20px;
+    border-bottom: none;
+}
+
+.booking-form .input-icon {
+    display: flex;
+    align-items: center;
+}
+
+.booking-form .input-icon i {
+                margin-left: 20px;
+                font-size: 30px;
+                text-align: center;
+}
+
+.booking-form input[type="text"],
+.booking-form input[type="email"],
+.booking-form input[type="tel"],
+.booking-form select {
+            position: absolute;
+            margin-left: 75px;
+            border: 1px solid #ccc;
+            border-radius: 5px;
+            font-size: 16px;
+            padding: 10px;
+            width: calc(100% - 95px);
+}
+
+.booking-form button[type="submit"] {
+            padding: 10px 20px;
+            background-color: #7FC142;
+            color: #fff;
+            border: none;
+            border-radius: 5px;
+            font-size: 18px;
+            cursor: pointer;
+            width: calc(100% - 40px);
+            margin: 0 20px 40px;
+}
+
+.booking-form button[type="submit"]:hover {
+    background-color: #0056b3;
+}
+
+    .TongTien {
+        position: absolute;
+        margin-left: 80px;
+        color: darkcyan;
+        font-weight: 600;
+    }
+    
+    </style>
+    <div class="hotel-info">
+    <h2>@Model.result.name</h2>
+    <p>Địa chỉ: @Model.result.formatted_address</p>
+    <p style="color: blueviolet;">Liên Hệ: @Model.result.international_phone_number</p>
+    <div class="ratingRateYo" dataRateYo="@Model.result.rating"></div>
+    <span class="user_ratings_total">(@Model.result.rating trên 5 - @Model.result.user_ratings_total đánh giá)</span>
+        <h3>Photos</h3>
+        <div class="photos">
+        @if (@Model.result.photos != null && @Model.result.photos.Count > 0)
+        {
+            foreach (var photo in @Model.result.photos)
+            {
+                    var photoUrl = $"https://maps.googleapis.com/maps/api/place/photo?maxwidth=400&photoreference={photo.photo_reference}&key={"AIzaSyBEDz8E-0blzkjsSDN-F-IfHr8Z1zIFem0"}";
+                <img src="@photoUrl" alt="Hotel Photo" />
+            }
+        }
+        </div>
+        <h3 style="color:green;">Reviews</h3>
+        <div class="reviews">
+            @if (@Model.result.reviews != null && @Model.result.reviews.Count > 0)
+            {
+                foreach (var review in @Model.result.reviews)
+                {
+                    <div class="review">
+                    <h3>Reviewed by @review.author_name!</h3>
+                        <p>@review.text</p>
+                    <img class="avata-review" src="@review.profile_photo_url" alt="avata" /><p class="author">@review.author_name</p>
+                    <div class="ratingRateYo" dataRateYo="@review.rating"></div>
+                    <span class="relative_time_description">(@DateTimeOffset.FromUnixTimeSeconds((long)review.time).ToString("dd/MM/yyyy HH:mm:ss") - @review.relative_time_description)</span>
+                    </div>
+                }
+            }
+        </div>
+    </div>
+<div class="booking-form">
+    <h3>Booking</h3>
+    <form id="bookingForm" action="/booking/create" method="POST">
+        <div class="form-group">
+            <div class="input-icon">
+                <i class="fas fa-user"></i>
+                <input type="text" id="fullName" name="fullName" placeholder="Họ và tên" required>
+            </div>
+        </div>
+
+        <div class="form-group">
+            <div class="input-icon">
+                <i class="fas fa-envelope"></i>
+                <input type="email" id="email" name="email" placeholder="Email" required>
+            </div>
+        </div>
+
+        <div class="form-group">
+            <div class="input-icon">
+                <i class="fas fa-phone"></i>
+                <input type="tel" id="phone" name="phone" placeholder="Số điện thoại" required>
+            </div>
+        </div>
+
+        <div class="form-group">
+            <div class="input-icon">
+                <i class="fas fa-bed"></i>
+                <select id="roomType" name="roomType" required>
+                    <option value="">-- Chọn loại phòng --</option>
+                    <option value="Standard">Standard</option>
+                    <option value="Deluxe">Deluxe</option>
+                    <option value="Suite">Suite</option>
+                </select>
+            </div>
+        </div>
+
+        <div class="form-group">
+            <div class="input-icon">
+                <i class="fas fa-credit-card"></i>
+                <select id="paymentMethod" name="paymentMethod" required>
+                    <option value="">-- Chọn phương thức thanh toán --</option>
+                    <option value="Payment-upon-checkin">Thanh toán khi nhận phòng</option>
+                    <option value="Credit-Card">Thanh toán bằng Visa/Mastercard</option>
+                </select>
+            </div>
+        </div>
+
+        <div class="form-group">
+            <div class="input-icon">
+                <i class="fas fa-money-bill"></i>
+                <label class="TongTien">999$</label>
+            </div>
+        </div>
+
+        <button type="submit" class="btn btn-primary">Đặt Phòng</button>
+    </form>
+</div>
+<div id="popup">
+        <div id="popup-content">
+            <div id="close" onclick="hidePopup()">&times;</div>
+            <label class="iconlabaido">&hearts;</label>
+            <label class="iconlabaiden">&clubs;</label>
+            <h2 style="display: inline">Thông báo </h2>
+            <label class="iconlabaido">&diams;</label>
+            <label class="iconlabaiden">&spades;</label>
+            <p id="noidungthongbao">Đây là nội dung của thông báo.</p>
+        </div>
+</div>
+<link rel="stylesheet" href="~/css/CreditPaymentForm.css"/>
+<div class="paymentCard-container">
+    <div class="card-container">
+        <div class="front">
+            <div class="image">
+                <img src="~/img/cssImage/chip.png" alt="">
+                <img src="~/img/cssImage/visa.png" alt="">
+            </div>
+            <div class="card-number-box">################</div>
+            <div class="flexbox">
+                <div class="box">
+                    <span>card holder</span>
+                    <div class="card-holder-name">full name</div>
+                </div>
+                <div class="box">
+                    <span>expires</span>
+                    <div class="expiration">
+                        <span class="exp-month">mm</span>
+                        <span class="exp-year">yy</span>
+                    </div>
+                </div>
+            </div>
+        </div>
+
+        <div class="back">
+            <div class="stripe"></div>
+            <div class="box">
+                <span>cvv</span>
+                <div class="cvv-box"></div>
+                <img src="~/img/cssImage/visa.png" alt="">
+            </div>
+        </div>
+
+    </div>
+    <form id="PaymentCreditForm" action="">
+        <div id="close-Payment-Popup" onclick="hidePaymentPopup()">&times;</div>
+        <div class="inputBox">
+            <span>card number</span>
+            <input type="text" maxlength="16" class="card-number-input" required>
+        </div>
+        <div class="inputBox">
+            <span>card holder</span>
+            <input type="text" class="card-holder-input" required>
+        </div>
+        <div class="inputBox">
+            <span>Email</span>
+            <input type="email" class="email-holder-input" required>
+        </div>
+        <div class="flexbox">
+            <div class="inputBox">
+                <span>expiration mm</span>
+                <select name="" class="month-input" required>
+                    <option value="">month</option>
+                    <option value="01">01</option>
+                    <option value="02">02</option>
+                    <option value="03">03</option>
+                    <option value="04">04</option>
+                    <option value="05">05</option>
+                    <option value="06">06</option>
+                    <option value="07">07</option>
+                    <option value="08">08</option>
+                    <option value="09">09</option>
+                    <option value="10">10</option>
+                    <option value="11">11</option>
+                    <option value="12">12</option>
+                </select>
+            </div>
+            <div class="inputBox">
+                <span>expiration yy</span>
+                <select name="" class="year-input" required>
+                    <option value="">year</option>
+                    <option value="2023">2023</option>
+                    <option value="2024">2024</option>
+                    <option value="2025">2025</option>
+                    <option value="2026">2026</option>
+                    <option value="2027">2027</option>
+                    <option value="2028">2028</option>
+                    <option value="2029">2029</option>
+                    <option value="2030">2030</option>
+                    <option value="2031">2031</option>
+                    <option value="2032">2032</option>
+                </select>
+            </div>
+            <div class="inputBox">
+                <span>Cvc</span>
+                <input type="text" maxlength="4" class="cvv-input" required>
+            </div>
+        </div>
+        <input type="submit" value="submit" class="submit-btn">
+    </form>
+</div>
+<script>
+    function showPaymentPopup() {
+        document.querySelector(".paymentCard-container").style.display = "flex";
+    }
+
+    function hidePaymentPopup() {
+        document.querySelector(".paymentCard-container").style.display = "none";
+    }
+    document.querySelector('.card-number-input').oninput = () => {
+        document.querySelector('.card-number-box').innerText = document.querySelector('.card-number-input').value;
+    }
+
+    document.querySelector('.card-holder-input').oninput = () => {
+        document.querySelector('.card-holder-name').innerText = document.querySelector('.card-holder-input').value;
+    }
+
+    document.querySelector('.month-input').oninput = () => {
+        document.querySelector('.exp-month').innerText = document.querySelector('.month-input').value;
+    }
+
+    document.querySelector('.year-input').oninput = () => {
+        document.querySelector('.exp-year').innerText = document.querySelector('.year-input').value;
+    }
+
+    document.querySelector('.cvv-input').onmouseenter = () => {
+        document.querySelector('.front').style.transform = 'perspective(1000px) rotateY(-180deg)';
+        document.querySelector('.back').style.transform = 'perspective(1000px) rotateY(0deg)';
+    }
+
+    document.querySelector('.cvv-input').onmouseleave = () => {
+        document.querySelector('.front').style.transform = 'perspective(1000px) rotateY(0deg)';
+        document.querySelector('.back').style.transform = 'perspective(1000px) rotateY(180deg)';
+    }
+
+    document.querySelector('.cvv-input').oninput = () => {
+        document.querySelector('.cvv-box').innerText = document.querySelector('.cvv-input').value;
+    }
+
+</script>
+<script>
+    $("#bookingForm").submit(function (event) {
+        event.preventDefault();
+        // Booking
+        if (document.getElementById("paymentMethod").value.localeCompare("Credit-Card") == 0) {
+            showPaymentPopup();
+        }
+        else
+        {
+            var kiemtraTongTien = $(".TongTien").first().html().replace("$", "");
+            //
+            var today = new Date();
+            var NhanPhong_Date = new Date(document.querySelector('input[type="date"][placeholder="Ngay-nhan-phong"]').value);
+            var KhoangCach_Date = Math.ceil((NhanPhong_Date.getTime() - today.getTime()) / (1000 * 3600 * 24));
+            //
+            if (Number.isNaN(parseFloat(kiemtraTongTien)) == false && parseFloat(kiemtraTongTien) > 0.01 && parseInt(KhoangCach_Date) >= 0) {
+                $.ajax({
+                    url: "/Booking/CreateWithPaymentUponCheckin", // Đường dẫn đến phương thức Login
+                    type: "POST",
+                    data: {
+                        CustomerName: document.getElementById("fullName").value,
+                        CustomerEmail: document.getElementById("email").value,
+                        CustomerPhone: document.getElementById("phone").value,
+                        HotelName: "@Model.result.name",
+                        HotelAddress: document.querySelector(".hotel-info p").innerHTML.replace("Địa chỉ: ", ""),
+                        CheckInDate: document.querySelector('input[type="date"][placeholder="Ngay-nhan-phong"]').value,
+                        CheckOutDate: document.querySelector('input[type="date"][placeholder="Ngay-tra-phong"]').value,
+                        RoomType: document.getElementById("roomType").value,
+                        NumberAdults: parseInt(document.querySelector('.hop input[type="number"]').value),
+                        NumberChildren: parseInt(document.querySelector('.book .hop:nth-child(4) input').value),
+                        PaymentMethod: document.getElementById("paymentMethod").value,
+                        TotalAmount: $(".TongTien").first().html().replace("$", "").replace(".", ",")
+                    },
+                    success: function (response) {
+                        // Xử lý phản hồi thành công
+                        thongbao("<br/>Đặt phòng thành công!");
+                        setTimeout(function () {
+                            window.location = Jsdomain + '/Booking/GetBookingsByCustomerId';
+                        }, 2000);
+                    },
+                    error: function (xhr) {
+                        if (xhr.status === 401) {
+                            // Người dùng chưa đăng nhập
+                            thongbao("<br/>Vui lòng đăng nhập để có thể đặt phòng nhé!");
+                        } else {
+                            thongbao("<br/>" + xhr.responseJSON.message);
+                        }
+                    }
+                });
+            }
+            else {
+                if (parseInt(KhoangCach_Date) < 0) {
+                    thongbao("<br/>Bạn phải chọn một ngày nhận phòng trong tương lai chứ :(");
+                }
+                else {
+                    thongbao("<br/>Sai thông tin! vui lòng kiểm tra lại các thông tin bạn đã nhập");
+                }
+            }
+        }
+    });
+    //PaymentCreditForm
+    $("#PaymentCreditForm").submit(function (event) {
+        event.preventDefault();
+        var kiemtraTongTien=$(".TongTien").first().html().replace("$", "");
+        //
+        var today = new Date();
+        var NhanPhong_Date = new Date(document.querySelector('input[type="date"][placeholder="Ngay-nhan-phong"]').value);
+        var KhoangCach_Date = Math.ceil((NhanPhong_Date.getTime() - today.getTime()) / (1000 * 3600 * 24));
+        //
+        if (Number.isNaN(parseFloat(kiemtraTongTien)) == false && parseFloat(kiemtraTongTien) > 0.01 && parseInt(KhoangCach_Date)>=0) {
+            $.ajax({
+                url: "/Booking/CreateWithPaymentCreditCard", // Đường dẫn đến phương thức Login
+                type: "POST",
+                data: {
+                    CustomerName: document.getElementById("fullName").value,
+                    CustomerEmail: document.getElementById("email").value,
+                    CustomerPhone: document.getElementById("phone").value,
+                    HotelName: "@Model.result.name",
+                    HotelAddress: document.querySelector(".hotel-info p").innerHTML.replace("Địa chỉ: ", ""),
+                    CheckInDate: document.querySelector('input[type="date"][placeholder="Ngay-nhan-phong"]').value,
+                    CheckOutDate: document.querySelector('input[type="date"][placeholder="Ngay-tra-phong"]').value,
+                    RoomType: document.getElementById("roomType").value,
+                    NumberAdults: parseInt(document.querySelector('.hop input[type="number"]').value),
+                    NumberChildren: parseInt(document.querySelector('.book .hop:nth-child(4) input').value),
+                    PaymentMethod: document.getElementById("paymentMethod").value,
+                    TotalAmount: $(".TongTien").first().html().replace("$", "").replace(".", ","),
+                    Email: document.querySelector('#PaymentCreditForm .email-holder-input').value,
+                    FullName: document.querySelector('#PaymentCreditForm .card-holder-input').value,
+                    CardNumber: document.querySelector('#PaymentCreditForm .card-number-input').value,
+                    CardMonth: document.querySelector('#PaymentCreditForm .month-input').value,
+                    CardYear: document.querySelector('#PaymentCreditForm .year-input').value,
+                    CardCvc: document.querySelector('#PaymentCreditForm .cvv-input').value
+                },
+                success: function (response) {
+                    // Xử lý phản hồi thành công
+                    hidePaymentPopup();
+                    thongbao("<br/>Đặt phòng thành công!");
+                    setTimeout(function () {
+                        window.location = Jsdomain + '/Booking/GetBookingsByCustomerId';
+                    }, 2000);
+                },
+                error: function (xhr) {
+                    if (xhr.status === 401) {
+                        //người dùng chưa đăng nhập
+                        thongbao("<br/>vui lòng đăng nhập để có thể đặt phòng nhé!");
+                    } else {
+                        var errorMessage = JSON.parse(xhr.responseText).message;
+                        thongbao("<br/>" + errorMessage);
+                    }
+                }
+            });
+        }
+        else {
+            if (parseInt(KhoangCach_Date)<0)
+            {
+                thongbao("<br/>Bạn phải chọn một ngày nhận phòng trong tương lai chứ :(");
+            }
+            else
+            {
+                thongbao("<br/>Sai thông tin! vui lòng kiểm tra lại các thông tin bạn đã nhập");
+            }
+        }
+    });
+    document.getElementById("roomType").onchange=function(){
+        var startDate = new Date(document.querySelector('input[type="date"][placeholder="Ngay-nhan-phong"]').value);
+        var endDate = new Date(document.querySelector('input[type="date"][placeholder="Ngay-tra-phong"]').value);
+        var timeDifference = endDate.getTime() - startDate.getTime();
+        var dayDifference = Math.ceil(timeDifference / (1000 * 3600 * 24));
+        if (Number.isNaN(parseInt(dayDifference)) == false && parseInt(dayDifference) > 0) {
+            var Giamacdinh = 0;
+            if (Number.isNaN(parseFloat(document.querySelector('.hop input[type="number"]').value)) == false) {
+                Giamacdinh = parseFloat(localStorage.getItem("@Model.result.place_id")) * parseFloat(document.querySelector('.hop input[type="number"]').value);
+            }
+            if (Number.isNaN(parseFloat(document.querySelector('.book .hop:nth-child(4) input').value)) == false) {
+                Giamacdinh += parseFloat(localStorage.getItem("@Model.result.place_id")) * 0.7 * parseFloat(document.querySelector('.book .hop:nth-child(4) input').value);
+            }
+            if (document.getElementById("roomType").value.localeCompare("Deluxe") == 0) {
+                Giamacdinh = Giamacdinh * parseFloat(dayDifference)*1.2;
+            }
+            else if (document.getElementById("roomType").value.localeCompare("Suite") == 0) {
+                Giamacdinh = Giamacdinh * parseFloat(dayDifference)*1.4;
+            }
+            $(".TongTien").first().html(Giamacdinh.toFixed(2) + "$");
+        }
+        else {
+            var Giamacdinh = 0;
+            $(".TongTien").first().html(Giamacdinh.toFixed(2) + "$");
+        }
+    }
+    document.querySelector('input[type="date"][placeholder="Ngay-nhan-phong"]').onchange = function () {
+        var startDate = new Date(document.querySelector('input[type="date"][placeholder="Ngay-nhan-phong"]').value);
+        var endDate = new Date(document.querySelector('input[type="date"][placeholder="Ngay-tra-phong"]').value);
+        var timeDifference = endDate.getTime() - startDate.getTime();
+        var dayDifference = Math.ceil(timeDifference / (1000 * 3600 * 24));
+        if (Number.isNaN(parseInt(dayDifference)) == false && parseInt(dayDifference)>0){
+            var Giamacdinh=0;
+            if (Number.isNaN(parseFloat(document.querySelector('.hop input[type="number"]').value))==false)
+            {
+                Giamacdinh = parseFloat(localStorage.getItem("@Model.result.place_id")) * parseFloat(document.querySelector('.hop input[type="number"]').value);
+            }
+            if (Number.isNaN(parseFloat(document.querySelector('.book .hop:nth-child(4) input').value)) == false) {
+                Giamacdinh += parseFloat(localStorage.getItem("@Model.result.place_id"))*0.7 * parseFloat(document.querySelector('.book .hop:nth-child(4) input').value);
+            }
+            Giamacdinh = Giamacdinh * parseFloat(dayDifference);
+            $(".TongTien").first().html(Giamacdinh.toFixed(2) + "$");
+        }
+        else
+        {
+            var Giamacdinh = 0;
+            $(".TongTien").first().html(Giamacdinh.toFixed(2) + "$");
+        }
+    };
+    document.querySelector('input[type="date"][placeholder="Ngay-tra-phong"]').onchange = function () {
+        var startDate = new Date(document.querySelector('input[type="date"][placeholder="Ngay-nhan-phong"]').value);
+        var endDate = new Date(document.querySelector('input[type="date"][placeholder="Ngay-tra-phong"]').value);
+        var timeDifference = endDate.getTime() - startDate.getTime();
+        var dayDifference = Math.ceil(timeDifference / (1000 * 3600 * 24));
+        if (Number.isNaN(parseInt(dayDifference)) == false && parseInt(dayDifference) > 0) {
+            var Giamacdinh = 0;
+            if (Number.isNaN(parseFloat(document.querySelector('.hop input[type="number"]').value)) == false) {
+                Giamacdinh = parseFloat(localStorage.getItem("@Model.result.place_id")) * parseFloat(document.querySelector('.hop input[type="number"]').value);
+            }
+            if (Number.isNaN(parseFloat(document.querySelector('.book .hop:nth-child(4) input').value)) == false) {
+                Giamacdinh += parseFloat(localStorage.getItem("@Model.result.place_id")) * 0.7 * parseFloat(document.querySelector('.book .hop:nth-child(4) input').value);
+            }
+            Giamacdinh = Giamacdinh * parseFloat(dayDifference);
+            $(".TongTien").first().html(Giamacdinh.toFixed(2) + "$");
+        }
+        else
+        {
+            var Giamacdinh = 0;
+            $(".TongTien").first().html(Giamacdinh.toFixed(2) + "$");
+        }
+    };
+    document.querySelector('.hop input[type="number"]').onchange = function () {
+        var startDate = new Date(document.querySelector('input[type="date"][placeholder="Ngay-nhan-phong"]').value);
+        var endDate = new Date(document.querySelector('input[type="date"][placeholder="Ngay-tra-phong"]').value);
+        var timeDifference = endDate.getTime() - startDate.getTime();
+        var dayDifference = Math.ceil(timeDifference / (1000 * 3600 * 24));
+        if (Number.isNaN(parseInt(dayDifference)) == false && parseInt(dayDifference) > 0) {
+            var Giamacdinh = 0;
+            if (Number.isNaN(parseFloat(document.querySelector('.hop input[type="number"]').value)) == false) {
+                Giamacdinh = parseFloat(localStorage.getItem("@Model.result.place_id")) * parseFloat(document.querySelector('.hop input[type="number"]').value);
+            }
+            if (Number.isNaN(parseFloat(document.querySelector('.book .hop:nth-child(4) input').value)) == false) {
+                Giamacdinh += parseFloat(localStorage.getItem("@Model.result.place_id")) * 0.7 * parseFloat(document.querySelector('.book .hop:nth-child(4) input').value);
+            }
+            Giamacdinh = Giamacdinh * parseFloat(dayDifference);
+            $(".TongTien").first().html(Giamacdinh.toFixed(2) + "$");
+        }
+        else {
+            var Giamacdinh = 0;
+            $(".TongTien").first().html(Giamacdinh.toFixed(2) + "$");
+        }
+    };
+    document.querySelector('.book .hop:nth-child(4) input').onchange = function () {
+        var startDate = new Date(document.querySelector('input[type="date"][placeholder="Ngay-nhan-phong"]').value);
+        var endDate = new Date(document.querySelector('input[type="date"][placeholder="Ngay-tra-phong"]').value);
+        var timeDifference = endDate.getTime() - startDate.getTime();
+        var dayDifference = Math.ceil(timeDifference / (1000 * 3600 * 24));
+        if (Number.isNaN(parseInt(dayDifference)) == false && parseInt(dayDifference)>0){
+            var Giamacdinh=0;
+            if (Number.isNaN(parseFloat(document.querySelector('.hop input[type="number"]').value))==false)
+            {
+                Giamacdinh = parseFloat(localStorage.getItem("@Model.result.place_id")) * parseFloat(document.querySelector('.hop input[type="number"]').value);
+            }
+            if (Number.isNaN(parseFloat(document.querySelector('.book .hop:nth-child(4) input').value)) == false) {
+                Giamacdinh += parseFloat(localStorage.getItem("@Model.result.place_id"))*0.7 * parseFloat(document.querySelector('.book .hop:nth-child(4) input').value);
+            }
+            Giamacdinh = Giamacdinh * parseFloat(dayDifference);
+            $(".TongTien").first().html(Giamacdinh.toFixed(2) + "$");
+        }
+        else
+        {
+            var Giamacdinh = 0;
+            $(".TongTien").first().html(Giamacdinh.toFixed(2) + "$");
+        }
+    };
+</script>
+<script src="https://cdnjs.cloudflare.com/ajax/libs/rateYo/2.3.2/jquery.rateyo.min.js"></script>
+<script>
+    $(function () {
+        $('.ratingRateYo').each(function () {
+            var rating = $(this).attr('dataRateYo'); rating = rating.replace(",", ".");
+            $(this).rateYo({
+                rating: rating,
+                readOnly: true,
+                starWidth: "20px",
+                ratedFill: "#ffc107",
+                spacing: "4px"
+            });
+        });
+        var RatingN = parseFloat("@Model.result.rating");
+        var RatingTotal = parseInt("@Model.result.user_ratings_total");
+        var Gia = 0;
+        if (localStorage.getItem("@Model.result.place_id")==null)
+        {
+            if (RatingN > 4.7) {
+            Gia = Math.random() * 35.9 + 60;
+        }
+        else if (RatingN > 4 && RatingN <= 4.7) {
+            Gia = Math.random() * 25.5 + 50;
+        }
+        else if (RatingN >3 &&RatingN <= 4)
+        {
+            Gia = Math.random() * 18.2 + 37;
+        }
+        else if (RatingN > 2 && RatingN <= 3)
+        {
+            Gia = Math.random() * 16.9 + 23;
+        }
+        else
+        {
+            Gia = Math.random() * 20.5 + 5;
+        }
+        if (RatingTotal > 1000) {
+            Gia = Gia * 1.7;
+        }
+        else if (RatingTotal > 500 && RatingTotal <= 1000) {
+            Gia = Gia * 1.5;
+        }
+        else if (RatingTotal > 200 && RatingTotal <= 500) {
+            Gia = Gia * 1.4;
+        }
+        else if (RatingTotal > 100 && RatingTotal <= 200) {
+            Gia = Gia * 1.3;
+        }
+        else if (RatingTotal > 60 && RatingTotal <= 100) {
+            Gia = Gia * 1.2;
+        }
+        else if (RatingTotal > 30 && RatingTotal <= 60) {
+            Gia = Gia * 1.1;
+        }
+        else {
+            Gia = Gia;
+            } 
+            localStorage.setItem("@Model.result.place_id", Gia.toFixed(2));
+            $(".TongTien").first().html(Gia.toFixed(2) + "$");
+        }
+        else
+        {
+            $(".TongTien").first().html(localStorage.getItem("@Model.result.place_id")+"$");
+        }
+    });
+    
+</script>

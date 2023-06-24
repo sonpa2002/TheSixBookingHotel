@@ -1,0 +1,274 @@
+﻿@using Microsoft.AspNetCore.Http.Extensions
+@{
+    string domain = $"{Context.Request.Scheme}://{Context.Request.Host}";
+}
+<!DOCTYPE html>
+<html lang="en">
+<head>
+    <meta charset="UTF-8">
+    <meta http-equiv="X-UA-Compatible" content="IE=edge">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <link rel="stylesheet" href="~/font-awesome/css/all.css" />
+    <link rel="stylesheet" href="~/css/Index.css" />
+    <script src="https://code.jquery.com/jquery-3.6.0.min.js"></script>
+    <title>Payment-View</title>
+    <script>
+        Jsdomain = "@domain";
+    </script>
+    <style>
+        .footer {
+            position: absolute;
+            margin: 0;
+            width: 100vw;
+            line-height: 10px;
+            padding: 0 20px 25px;
+            top: calc(100vh - 261px);
+            z-index:1;
+        }
+        .footer .box {
+            font-size: 20px;
+            color: #7fc142;
+            margin-top: 0;
+        }
+
+    </style>
+</head>
+<header>
+    <div class="content flex_space">
+        <div><a href="@Url.Action("Index", "StripeViewAPI")" id="logo">THE Eight</a></div>
+        <div class="navlinks">
+            <ul id="menulist">
+                <li><a href="@Url.Action("Index", "StripeViewAPI")">home</a></li>
+                <li><a>about</a></li>
+                <li><a id="contactus" href="#contact">contact-Us</a></li>
+                <li><button class="primary-btn">PAY NOW</button></li>
+                @if (User.Identity.IsAuthenticated)
+                {
+                    <li class="dropdown">
+                        <a href="#" class="username">@User.Identity.Name <i class="fas fa-caret-down"></i></a>
+                        <ul class="dropdown-menu">
+                            <li><a href="#"><i class="fas fa-user"></i> Hồ sơ</a></li>
+                            <li><a href="@Url.Action("GetBookingsByCustomerId", "Booking")"><i class="fas fa-file-alt"></i> Lịch sử</a></li>
+                            <li><a href=" @Url.Action("Logout", "Account")"><i class="fas fa-sign-out-alt"></i> Đăng xuất</a></li>
+                        </ul>
+                    </li>
+                    @*<li>
+                <label style="color: #7fc142;font-size:0.9vw;font-weight:700;margin-left:20px;cursor:pointer;">@User.Identity.Name</label>
+                </li>*@
+                }
+                else
+                {
+
+                    <li><button id="DangNhap-btn" class="primary-btn">Đăng Nhập</button></li>
+                }
+            </ul>
+
+            <span class="fa-solid fa-bars"></span>
+        </div>
+    </div>
+</header>
+<div class="Login-btn">
+    <div id="popup-zindex" class="Login">
+        <form action="/Account/Login" method="post" id="form-login">
+            <i id="close-formlogin" class="fa-solid fa-xmark"></i>
+            <h1 class="form-heading">Đăng Nhập</h1>
+            <div class="form-group">
+                <i class="fa-solid fa-user"></i>
+                <input type="text" class="form-input" placeholder="Tên đăng nhập" name="username" id="username-input">
+            </div>
+            <div class="form-group">
+                <i class="fa-solid fa-key"></i>
+                <input type="password" class="form-input" placeholder="Mật Khẩu" name="password" id="password-input">
+            </div>
+            <input type="submit" value="Đăng Nhập" class="form-submit">
+            <a>Tạo tài khoản</a><a>Quên mật khẩu</a>
+            <p style="margin-top: -265px;color: red;text-align: center;display:none;" id="err-mes">Lỗi ở đây nè</p>
+        </form>
+    </div>
+</div>
+<div class="Register-btn">
+    <div id="popup-Register" class="Register">
+        <form action="/Account/Register" method="post" id="form-Register">
+            <i id="close-formregister" class="fa-solid fa-xmark"></i>
+            <h1 class="form-heading">Đăng Ký Tài Khoản</h1>
+            <div class="form-group">
+                <i class="fa-solid fa-user"></i>
+                <input type="text" class="form-input" placeholder="Tên đăng nhập" name="username" id="username-input-Register">
+            </div>
+            <div class="form-group">
+                <i class="fa-solid fa-key"></i>
+                <input type="password" class="form-input" placeholder="Mật Khẩu" name="password" id="password-input-Register">
+            </div>
+            <div class="form-group">
+                <i class="fa-solid fa-key"></i>
+                <input type="password" class="form-input" placeholder="Nhập lại mật Khẩu" name="confirmpassword" id="conf-pass-Register">
+            </div>
+            <input type="submit" value="Đăng Ký" class="form-submit">
+            <a>Đăng nhập</a><a>Quên mật khẩu</a>
+            <p style="margin-top: -333px;color: red;text-align: center;display:none;" id="err-mes-Register">Lỗi ở đây nè</p>
+        </form>
+    </div>
+</div>
+<script>
+    $(function () {
+        // Gắn sự kiện submit vào form
+        $("#form-login").submit(function (event) {
+            event.preventDefault(); // Ngăn chặn việc submit form mặc định
+
+            // Lấy giá trị của username và password
+            var username = $("#username-input").val();
+            var password = $("#password-input").val();
+            if (username == "" || password == "") {
+                if (username == "") {
+                    $("#err-mes").html("<strong>" + "Vui lòng nhập Tên đăng nhập" + "</strong>");
+                }
+                else {
+                    $("#err-mes").html("<strong>" + "Vui lòng nhập Mật khẩu" + "</strong>");
+                }
+                $("#err-mes").css("display", "block");
+                setTimeout(function () {
+                    $("#err-mes").css("display", "none");
+                }, 3000);
+            }
+            else {
+                // Gửi yêu cầu đăng nhập qua AJAX
+                $.ajax({
+                    url: "/StripeViewAPI/Login", // Đường dẫn đến phương thức Login
+                    type: "POST",
+                    data: {
+                        Email: username,
+                        Password: password,
+                        RememberMe: true
+                    },
+                    success: function (response) {
+                        // Xử lý phản hồi thành công (đăng nhập thành công)
+
+                        $("#err-mes").css("display", "block");
+                        $("#err-mes").html("<strong>" + "Đăng nhập thành công!" + "</strong>");
+                        // Thực hiện các tác vụ tiếp theo (chuyển hướng, cập nhật UI, v.v.)
+                        window.location = "@domain";
+                    },
+                    error: function (xhr) {
+                        // Xử lý phản hồi lỗi (đăng nhập không thành công)
+                        $("#err-mes").css("display", "block");
+                        $("#err-mes").html("<strong>" + xhr.responseJSON.message + "</strong>");
+                        setTimeout(function () {
+                            $("#err-mes").css("display", "none");
+                        }, 3000);
+                    }
+                });
+            }
+
+        });
+        $("#form-Register").submit(function (event) {
+            event.preventDefault(); // Ngăn chặn việc submit form mặc định
+
+            // Lấy giá trị của username và password
+            var usernameRegister = $("#username-input-Register").val();
+            var passwordRegister = $("#password-input-Register").val();
+            var confirmpassRegister = $("#conf-pass-Register").val();
+            if (usernameRegister == "" || passwordRegister == "" || confirmpassRegister == "") {
+                if (usernameRegister == "") {
+                    $("#err-mes-Register").html("<strong>" + "Vui lòng nhập Tên đăng nhập" + "</strong>");
+                }
+                else if (passwordRegister == "") {
+                    $("#err-mes-Register").html("<strong>" + "Vui lòng nhập Mật khẩu" + "</strong>");
+                }
+                else {
+                    $("#err-mes-Register").html("<strong>" + "Vui lòng nhập Mật khẩu xác nhận" + "</strong>");
+                }
+                $("#err-mes-Register").css("display", "block");
+                setTimeout(function () {
+                    $("#err-mes-Register").css("display", "none");
+                }, 3000);
+            }
+            else {
+                // Gửi yêu cầu đăng nhập qua AJAX
+                $.ajax({
+                    url: "/StripeViewAPI/Register", // Đường dẫn đến phương thức Register
+                    type: "POST",
+                    data: {
+                        Email: usernameRegister,
+                        Password: passwordRegister,
+                        ConfirmPassword: confirmpassRegister
+                    },
+                    success: function (response) {
+                        // Xử lý phản hồi thành công (đăng nhập thành công)
+                        $("#err-mes-Register").css("color", "green");
+                        $("#err-mes-Register").css("display", "block");
+                        $("#err-mes-Register").html("<strong>" + "Đăng Ký thành công!" + "</strong>");
+                        // Thực hiện các tác vụ tiếp theo (chuyển hướng, cập nhật UI, v.v.)
+                        $("#username-input").val(usernameRegister);
+                        $("#password-input").val(passwordRegister);
+                        document.querySelector("#form-login input[type='submit']").click();
+                    },
+                    error: function (xhr) {
+                        // Xử lý phản hồi lỗi (đăng nhập không thành công)
+                        $("#err-mes-Register").css("display", "block");
+                        $("#err-mes-Register").html("<strong>" + xhr.responseJSON.message + "</strong>");
+                        setTimeout(function () {
+                            $("#err-mes-Register").css("display", "none");
+                        }, 3000);
+                    }
+                });
+            }
+
+        });
+    });
+</script>
+<body>
+    @RenderBody()
+    <section class="footer">
+        <div class="social">
+            <a href="#"><i class="fa-brands fa-twitter"></i></a>
+            <a href="#"><i class="fa-brands fa-facebook"></i></a>
+            <a href="#"><i class="fa-brands fa-instagram"></i></a>
+            <a href="#"><i class="fa-brands fa-youtube"></i></a>
+            <a href="#"><i class="fa-brands fa-tiktok"></i></a>
+        </div>
+        <div class="box">
+            <h2>Contact Us</h2>
+            <i class="fa fa-location-dot"></i>
+            <label>276 Điện Biên Phủ, phường 17, quận Bình Thạnh, Tp. Hồ Chí Minh</label>
+            <i class="fa fa-phone"></i>
+            <label>[+84] 35 678 6868</label>
+            <i class="fa fa-envelope"></i>
+            <label>theEight@uef.edu.vn</label><br />
+            <label>Trang web thuộc sở hữu bởi Nhóm THE-EIGHT (222.ITE1125E.B01E) Software Engineering  << 20D1TH-AT01 >> </label>
+        </div>
+    </section>
+</body>
+</html>
+<script>
+    var Register_popup = document.getElementById("form-Register");
+    var Login_popup = document.getElementById("form-login");
+    document.getElementById("DangNhap-btn").onclick = function () {
+        Login_popup.style.visibility = "visible";
+        document.getElementById("popup-zindex").style.zIndex = "1000";
+    }
+    document.getElementById('close-formlogin').onclick = function () {
+        Login_popup.style.visibility = "hidden";
+        Register_popup.style.visibility = "hidden";
+        document.getElementById("popup-zindex").style.zIndex = "-1";
+        document.getElementById("popup-Register").style.zIndex = "-1";
+    }
+    document.getElementById('close-formregister').onclick = function () {
+        Login_popup.style.visibility = "hidden";
+        Register_popup.style.visibility = "hidden";
+        document.getElementById("popup-zindex").style.zIndex = "-1";
+        document.getElementById("popup-Register").style.zIndex = "-1";
+    }
+    document.querySelector('#form-login a:first-of-type').onclick = function () {
+        Login_popup.style.visibility = "hidden";
+        document.getElementById("popup-zindex").style.zIndex = "-1";
+        Register_popup.style.visibility = "visible";
+        document.getElementById("popup-Register").style.zIndex = "1099";
+    }
+    document.querySelector('#form-Register a:first-of-type').onclick = function () {
+        Register_popup.style.visibility = "hidden";
+        document.getElementById("popup-Register").style.zIndex = "-1";
+        Login_popup.style.visibility = "visible";
+        document.getElementById("popup-zindex").style.zIndex = "1000";
+    }
+
+</script>

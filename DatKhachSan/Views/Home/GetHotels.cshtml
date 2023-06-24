@@ -1,0 +1,212 @@
+﻿@model IEnumerable<dynamic>
+@{
+    Layout = "~/Views/Shared/GetHotels_Layout.cshtml";
+    ViewData["Title"] = "Hotels";
+}
+<script>
+    var addcell = 1;
+</script>
+<style>
+        .hotel-table {
+            display: table;
+            width: 100%;
+        }
+        
+        .hotel-row {
+            display: table-row;
+        }
+        
+        .hotel-cell {
+            display: table-cell;
+            width: 33.33%;
+            padding: 10px;
+            border: 1px solid #ccc;
+            transition: transform 0.3s;
+        }
+        
+        .hotel-cell:hover {
+            transform: scale(1.05);
+        }
+        
+        .hotel-cell img {
+            width: 100%;
+            height: auto;
+            margin-bottom: 10px;
+        }
+        
+        .hotel-cell h2 {
+            margin: 0;
+            font-size: 18px;
+            color: green;
+            font-weight: bold;
+        }
+        
+        .hotel-cell p {
+            margin: 5px 0;
+        }
+
+    .ratingRateYo {
+        margin-left:0;
+        padding-left:0;
+    }
+
+    .user_ratings_total {
+        color: #ffc107;
+    }
+
+    .hotel-cell img {
+        width: 100%; /* Đặt kích thước mong muốn cho hình ảnh */
+        height: 300px;
+        border: 2px solid rebeccapurple;
+        object-fit: cover; /* Đảm bảo hình ảnh bao phủ kích thước khung */
+    }
+    </style>
+<link rel="stylesheet" href="https://cdnjs.cloudflare.com/ajax/libs/rateYo/2.3.2/jquery.rateyo.min.css">
+<style>
+    .jq-ry-container {
+        padding: 0 0px;
+        display: inline-flex;
+        margin-top: -3px;
+    }
+
+</style>
+<script src="https://cdnjs.cloudflare.com/ajax/libs/rateYo/2.3.2/jquery.rateyo.min.js"></script>
+<div class="hotel-table" data-next-page-token="@ViewData["NextPageToken"]">
+    @foreach (var hotel in Model)
+    {
+        if (ViewData["hotelIndex"] == null)
+        {
+            ViewData["hotelIndex"] = 0;
+        }
+
+        if ((int)ViewData["hotelIndex"] % 3 == 0)
+        {
+            @Html.Raw("<div class='hotel-row'>")
+        }
+
+        <div class="hotel-cell" onclick="gotoinfohotel('@hotel.place_id')">
+        @if (hotel.photos != null && hotel.photos.Count > 0)
+        {
+            foreach (var photo in hotel.photos)
+            {
+                    var photoUrl = $"https://maps.googleapis.com/maps/api/place/photo?maxwidth=400&photoreference={photo.photo_reference}&key={"AIzaSyBEDz8E-0blzkjsSDN-F-IfHr8Z1zIFem0"}";
+                <img src="@photoUrl" alt="Hotel Photo" />
+            }
+        }
+            <h2>@hotel.name</h2>
+            <p>Địa chỉ: @hotel.formatted_address</p>
+            <div class="ratingRateYo" dataRateYo="@hotel.rating"></div>
+            <span class="user_ratings_total">(@hotel.rating trên 5 - @hotel.user_ratings_total đánh giá)</span>
+        </div>
+
+        if ((int)ViewData["hotelIndex"] % 3 == 2 || (int)ViewData["hotelIndex"] == (Model.Count() - 1))
+        {
+            @Html.Raw("</div>")
+        }
+
+        ViewData["hotelIndex"] = (int)ViewData["hotelIndex"] + 1;
+    }
+</div>
+<script>
+    function gotoinfohotel(place_id) {
+        var search_by_text = document.querySelector('.search-box input').value;
+        var NgayNhanPhong = document.querySelector('input[type="date"][placeholder="Ngay-nhan-phong"]').value;
+        var NgayTraPhong = document.querySelector('input[type="date"][placeholder="Ngay-tra-phong"]').value;
+        var SoNguoiLon = document.querySelector('.hop input[type="number"]').value;
+        var SoTreEm = document.querySelector('.book .hop:nth-child(4) input').value;
+        window.location = Jsdomain + '/Home/GetInfoHotel/' + place_id + ';' + search_by_text + ';' + NgayNhanPhong + ';' + NgayTraPhong + ';' + SoNguoiLon+';'+SoTreEm;
+    }
+    //document.getElementById("load-more-button").addEventListener("click", loadMoreHotels);
+    window.addEventListener("scroll", ktraendpage);
+    function ktraendpage() {
+        if ((window.innerHeight + window.scrollY) >= document.body.offsetHeight-400) {
+            window.removeEventListener("scroll", ktraendpage);
+            loadMoreHotels();
+            setTimeout(function () {
+                window.addEventListener("scroll", ktraendpage);
+            }, 2000);
+        }
+    }
+    function initializeRating() {
+        $('.ratingRateYo').each(function () {
+            var rating = $(this).attr('dataRateYo');
+            rating = rating.replace(",", ".");
+            $(this).rateYo({
+                rating: rating,
+                readOnly: true,
+                starWidth: "20px",
+                ratedFill: "#ffc107",
+                spacing: "4px"
+            });
+        });
+    }
+    async function loadMoreHotels() {
+        var NextPageTokenOBJ = document.querySelector('.hotel-table');
+        var NextPageToken = NextPageTokenOBJ.getAttribute("data-next-page-token");
+        var url = "@Url.Action("GetHotelsWithnextPageToken", "Home")?nextPageToken=" + NextPageToken;
+        //alert(addcell);
+        var response = await fetch(url);
+        if (response.ok) {
+            var jsonresponse = await response.json();
+            var hotelsdata = JSON.parse(jsonresponse.data);
+            var hotels = hotelsdata.results;
+            //console.log(hotels);
+            var addhotels ="";
+            if (addcell % 3!=0){
+                addhotels = NextPageTokenOBJ.innerHTML.substring(0, NextPageTokenOBJ.innerHTML.lastIndexOf("</div>"));
+            }
+            else
+            {
+                addhotels = NextPageTokenOBJ.innerHTML;
+            }
+            for (var i = 0; i < hotels.length; i++) {
+                if (Math.abs((i - addcell)) % 3 == 0) {
+                    addhotels += "<div class='hotel-row'>";
+                }
+                addhotels += '<div class="hotel-cell" onclick="gotoinfohotel(' + "'" + hotels[i].place_id + "'" + ')">';
+                if (hotels[i].photos != null && hotels[i].photos.length > 0) {
+                    for (var photo = 0; photo < hotels[i].photos.length; photo++) {
+                        var photoUrl = "https://maps.googleapis.com/maps/api/place/photo?maxwidth=400&amp;photoreference=" + hotels[i].photos[photo].photo_reference + "&amp;key=" + "AIzaSyBEDz8E-0blzkjsSDN-F-IfHr8Z1zIFem0";
+                        addhotels += '<img src="' + photoUrl + '" alt = "Hotel Photo" />';
+                    }
+                }
+                //addhotels += '<img src="https://maps.googleapis.com/maps/api/place/photo?maxwidth=400&photoreference={'+hotels[i].photos.photo_reference+'}&key={"AIzaSyBEDz8E-0blzkjsSDN-F-IfHr8Z1zIFem0"}" alt="Hotel Photo" />';
+                addhotels += '<h2>' + hotels[i].name + '</h2>';
+                addhotels += '<p>Địa chỉ: ' + hotels[i].formatted_address + '</p>';
+                addhotels += '<div class="ratingRateYo" dataRateYo="' + hotels[i].rating + '"></div>';
+                addhotels += '<span class="user_ratings_total">(' + hotels[i].rating + ' trên 5 - ' + hotels[i].user_ratings_total + ' đánh giá)</span>';
+                addhotels += '</div>';
+                if ((Math.abs((i - (addcell % 3))) % 3 == 2) && (i > 1) || i == (hotels.length - 1) || ((i < 2) && ((addcell % 3) == (i + 1)))) {
+                    addhotels += '</div>';
+                }
+            } addcell++;
+            NextPageTokenOBJ.innerHTML = addhotels;
+            initializeRating();
+            //
+            if (jsonresponse.nextpagetoken == "") {
+                //đã đến cuối trang
+                window.removeEventListener("scroll", ktraendpage);
+            } else {
+                NextPageTokenOBJ.setAttribute("data-next-page-token", jsonresponse.nextpagetoken);
+            }
+            //
+    } else {
+            console.error("Lỗi khi fetch danh sách hotels.");
+        }
+    }
+</script>
+<script>
+$(function () {
+        $('.ratingRateYo').each(function () {
+            var rating = $(this).attr('dataRateYo'); rating = rating.replace(",", ".");
+            $(this).rateYo({
+                rating: rating,
+                readOnly: true,
+                starWidth: "20px",
+                ratedFill: "#ffc107",
+                spacing: "4px"
+            });
+        });
+    });
+
+</script>

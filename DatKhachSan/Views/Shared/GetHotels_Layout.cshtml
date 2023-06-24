@@ -1,0 +1,532 @@
+﻿@using Microsoft.AspNetCore.Http.Extensions
+@{
+    string domain = $"{Context.Request.Scheme}://{Context.Request.Host}";
+}
+<!DOCTYPE html>
+<html lang="en">
+<head>
+    <meta charset="UTF-8">
+    <meta http-equiv="X-UA-Compatible" content="IE=edge">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <link rel="stylesheet" href="~/css/gethotels_layout.css" />
+
+    <link rel="stylesheet" href="~/font-awesome/css/all.css" />
+    <script src="https://code.jquery.com/jquery-3.6.0.min.js"></script>
+    <title>Booking Hotel</title>
+    <script>
+        Jsdomain="@domain";
+    </script>
+</head>
+<header>
+    <div class="content flex_space">
+        <div><a href="@domain" id="logo">THE SIX</a></div>
+        <div class="navlinks">
+            <ul id="menulist">
+                <li><a href="@domain">home</a></li>
+                <li><a>about</a></li>
+                <li><a>room</a></li>
+                <li><a>our service</a></li>
+                <li><a id="contactus" href="#contact">contact</a></li>
+                <li><button class="primary-btn">BOOK NOW</button></li>
+                @if (User.Identity.IsAuthenticated)
+                {
+                    <li class="dropdown">
+                        <a href="#" class="username">@User.Identity.Name <i class="fas fa-caret-down"></i></a>
+                        <ul class="dropdown-menu">
+                            <li><a href="#"><i class="fas fa-user"></i> Hồ sơ</a></li>
+                            <li><a href="@Url.Action("GetBookingsByCustomerId", "Booking")"><i class="fas fa-file-alt"></i> Lịch sử</a></li>
+                            <li><a href=" @Url.Action("Logout", "Account")"><i class="fas fa-sign-out-alt"></i> Đăng xuất</a></li>
+                            @if (User.IsInRole("Admin") || User.IsInRole("Manager"))
+                            {
+                                <li><a href=" @Url.Action("GetReportList", "Booking")"><i class="fas fa-comment"></i>Phản hồi</a></li>
+                            }
+                        </ul>
+                    </li>
+                    @*<li>
+                        <label style="color: #7fc142;font-size:0.9vw;font-weight:700;margin-left:20px;cursor:pointer;">@User.Identity.Name</label>
+                    </li>*@
+                }
+                else
+                {
+
+                    <li><button id="DangNhap-btn" class="primary-btn">Đăng Nhập</button></li>
+                }
+            </ul>
+            <span class="fa-solid fa-bars"></span>
+            @if (User.IsInRole("Admin"))
+            {
+                <div id="RoleView">Admin</div>
+            }
+            @if (User.IsInRole("Manager"))
+            {
+                <div id="RoleView">Manager</div>
+            }
+            @if (User.IsInRole("Partner"))
+            {
+                <div id="RoleView">Partner</div>
+            }
+            <style>
+                #RoleView {
+                    color: deeppink;
+                    position: absolute;
+                    background-color: lightgrey;
+                    width: 3.4vw;
+                    height: 2.7vw;
+                    line-height: 2.43vw;
+                    text-align: center;
+                    border-radius: 1.4vw;
+                    font-size: 0.7vw;
+                    font-weight: 800;
+                    border: solid 0.125vw deeppink;
+                    right: 30px;
+                    top: 13px;
+                    transform: rotate(-23deg);
+                }
+            </style>
+        </div>
+    </div>
+</header>
+
+<div class="Login-btn">
+    <div id="popup-zindex" class="Login">
+        <form action="/Account/Login" method="post" id="form-login">
+            <i id="close-formlogin" class="fa-solid fa-xmark"></i>
+            <h1 class="form-heading">Đăng Nhập</h1>
+            <div class="form-group">
+                <i class="fa-solid fa-user"></i>
+                <input type="text" class="form-input" placeholder="Tên đăng nhập" name="username" id="username-input">
+            </div>
+            <div class="form-group">
+                <i class="fa-solid fa-key"></i>
+                <input type="password" class="form-input" placeholder="Mật Khẩu" name="password" id="password-input">
+            </div>
+            <input type="submit" value="Đăng Nhập" class="form-submit">
+            <a>Tạo tài khoản</a><a>Quên mật khẩu</a>
+            <p style="margin-top: -265px;color: red;text-align: center;display:none;" id="err-mes">Lỗi ở đây nè</p>
+        </form>
+    </div>
+</div>
+<div class="Register-btn">
+    <div id="popup-Register" class="Register">
+        <form action="/Account/Register" method="post" id="form-Register">
+            <i id="close-formregister" class="fa-solid fa-xmark"></i>
+            <h1 class="form-heading">Đăng Ký Tài Khoản</h1>
+            <div class="form-group">
+                <i class="fa-solid fa-user"></i>
+                <input type="text" class="form-input" placeholder="Tên đăng nhập" name="username" id="username-input-Register">
+            </div>
+            <div class="form-group">
+                <i class="fa-solid fa-key"></i>
+                <input type="password" class="form-input" placeholder="Mật Khẩu" name="password" id="password-input-Register">
+            </div>
+            <div class="form-group">
+                <i class="fa-solid fa-key"></i>
+                <input type="password" class="form-input" placeholder="Nhập lại mật Khẩu" name="confirmpassword" id="conf-pass-Register">
+            </div>
+            <input type="submit" value="Đăng Ký" class="form-submit">
+            <a>Đăng nhập</a><a>Quên mật khẩu</a>
+            <p style="margin-top: -333px;color: red;text-align: center;display:none;" id="err-mes-Register">Lỗi ở đây nè</p>
+        </form>
+    </div>
+</div>
+<section class="book">
+    <div class="booking">
+        <div class="search-box">
+            <input type="text" placeholder="Search by Text" value="@ViewData["search_by_text"]">
+            <button type="submit"><i class="fas fa-search"></i></button>
+        </div>
+        <select class="select-provinces" name="calc_shipping_provinces" required="">
+            <option value="">Tỉnh / Thành phố</option>
+        </select>
+        <h1>Book Your Room</h1>
+
+        <div class="content grid">
+            <div class="hop">
+                <span>Ngày nhận phòng</span> <br>
+                <input type="date" placeholder="Ngay-nhan-phong" value="@ViewData["NgayNhanPhong"]">
+            </div>
+            <div class="hop">
+                <span>Ngày trả phòng</span> <br>
+                <input type="date" placeholder="Ngay-tra-phong" value="@ViewData["NgayTraPhong"]">
+            </div>
+            <div class="hop">
+                <span>Người Lớn</span> <br>
+                <input type="number" placeholder="01" min="0" max="100" value="@ViewData["SoNguoiLon"]">
+            </div>
+            <div class="hop">
+                <span>Trẻ Em </span> <br>
+                <input type="number" placeholder="01" min="0" max="100" value="@ViewData["SoTreEm"]">
+            </div>
+            <div class="searching">
+                <button class="search-btn">
+                    <span>Tìm</span>
+                    <i class="fas fa-arrow-circle-right"></i>
+                </button>
+            </div>
+        </div>
+    </div>
+</section>
+<script>
+    document.querySelector('#menulist li:nth-child(2) a').addEventListener("click", () => {
+        document.querySelector('body').scrollIntoView({
+            behavior: "smooth",
+            block: "end",
+            inline: "nearest"
+        });
+    });
+    document.querySelector('#menulist li:nth-child(4) a').addEventListener("click", () => {
+        //event.preventDefault();
+        window.scrollTo({
+            behavior: "smooth",
+            top: document.querySelector('#ourservices').offsetTop - 20,
+        });
+    });
+    document.querySelector('#menulist li:nth-child(5) a').addEventListener("click", () => {
+        window.scrollTo({
+            behavior: "smooth",
+            top: document.querySelector('.contact').offsetTop + 40,
+        });
+    });
+    $(function () {
+        // Gắn sự kiện submit vào form
+        $("#form-login").submit(function (event) {
+            event.preventDefault(); // Ngăn chặn việc submit form mặc định
+
+            // Lấy giá trị của username và password
+            var username = $("#username-input").val();
+            var password = $("#password-input").val();
+            if (username == "" || password == "") {
+                if (username == "") {
+                    $("#err-mes").html("<strong>" + "Vui lòng nhập Tên đăng nhập" + "</strong>");
+                }
+                else {
+                    $("#err-mes").html("<strong>" + "Vui lòng nhập Mật khẩu" + "</strong>");
+                }
+                $("#err-mes").css("display", "block");
+                setTimeout(function () {
+                    $("#err-mes").css("display", "none");
+                }, 3000);
+            }
+            else {
+                // Gửi yêu cầu đăng nhập qua AJAX
+                $.ajax({
+                    url: "/Account/Login", // Đường dẫn đến phương thức Login
+                    type: "POST",
+                    data: {
+                        Email: username,
+                        Password: password,
+                        RememberMe: true
+                    },
+                    success: function (response) {
+                        // Xử lý phản hồi thành công (đăng nhập thành công)
+
+                        $("#err-mes").css("display", "block");
+                        $("#err-mes").html("<strong>" + "Đăng nhập thành công!" + "</strong>");
+                        // Thực hiện các tác vụ tiếp theo (chuyển hướng, cập nhật UI, v.v.)
+                        location.reload(true);
+                    },
+                    error: function (xhr) {
+                        // Xử lý phản hồi lỗi (đăng nhập không thành công)
+                        $("#err-mes").css("display", "block");
+                        $("#err-mes").html("<strong>" + xhr.responseJSON.message + "</strong>");
+                        setTimeout(function () {
+                            $("#err-mes").css("display", "none");
+                        }, 3000);
+                    }
+                });
+            }
+
+        });
+        $("#form-Register").submit(function (event) {
+            event.preventDefault(); // Ngăn chặn việc submit form mặc định
+
+            // Lấy giá trị của username và password
+            var usernameRegister = $("#username-input-Register").val();
+            var passwordRegister = $("#password-input-Register").val();
+            var confirmpassRegister = $("#conf-pass-Register").val();
+            if (usernameRegister == "" || passwordRegister == "" || confirmpassRegister == "") {
+                if (usernameRegister == "") {
+                    $("#err-mes-Register").html("<strong>" + "Vui lòng nhập Tên đăng nhập" + "</strong>");
+                }
+                else if (passwordRegister == "") {
+                    $("#err-mes-Register").html("<strong>" + "Vui lòng nhập Mật khẩu" + "</strong>");
+                }
+                else {
+                    $("#err-mes-Register").html("<strong>" + "Vui lòng nhập Mật khẩu xác nhận" + "</strong>");
+                }
+                $("#err-mes-Register").css("display", "block");
+                setTimeout(function () {
+                    $("#err-mes-Register").css("display", "none");
+                }, 3000);
+            }
+            else {
+                // Gửi yêu cầu đăng nhập qua AJAX
+                $.ajax({
+                    url: "/Account/Register", // Đường dẫn đến phương thức Register
+                    type: "POST",
+                    data: {
+                        Email: usernameRegister,
+                        Password: passwordRegister,
+                        ConfirmPassword: confirmpassRegister
+                    },
+                    success: function (response) {
+                        // Xử lý phản hồi thành công (đăng nhập thành công)
+                        $("#err-mes-Register").css("color", "green");
+                        $("#err-mes-Register").css("display", "block");
+                        $("#err-mes-Register").html("<strong>" + "Đăng Ký thành công!" + "</strong>");
+                        // Thực hiện các tác vụ tiếp theo (chuyển hướng, cập nhật UI, v.v.)
+                        $("#username-input").val(usernameRegister);
+                        $("#password-input").val(passwordRegister);
+                        document.querySelector("#form-login input[type='submit']").click();
+                    },
+                    error: function (xhr) {
+                        // Xử lý phản hồi lỗi (đăng nhập không thành công)
+                        $("#err-mes-Register").css("display", "block");
+                        $("#err-mes-Register").html("<strong>" + xhr.responseJSON.message + "</strong>");
+                        setTimeout(function () {
+                            $("#err-mes-Register").css("display", "none");
+                        }, 3000);
+                    }
+                });
+            }
+
+        });
+    });
+</script>
+<body>
+    @RenderBody()
+</body>
+</html>
+<script>
+    var Register_popup = document.getElementById("form-Register");
+    var Login_popup = document.getElementById("form-login");
+    document.getElementById("DangNhap-btn").onclick = function () {
+        Login_popup.style.visibility = "visible";
+        document.getElementById("popup-zindex").style.zIndex = "1000";
+    }
+    document.getElementById('close-formlogin').onclick = function () {
+        Login_popup.style.visibility = "hidden";
+        Register_popup.style.visibility = "hidden";
+        document.getElementById("popup-zindex").style.zIndex = "-1";
+        document.getElementById("popup-Register").style.zIndex = "-1";
+    }
+    document.getElementById('close-formregister').onclick = function () {
+        Login_popup.style.visibility = "hidden";
+        Register_popup.style.visibility = "hidden";
+        document.getElementById("popup-zindex").style.zIndex = "-1";
+        document.getElementById("popup-Register").style.zIndex = "-1";
+    }
+    document.querySelector('#form-login a:first-of-type').onclick = function () {
+        Login_popup.style.visibility = "hidden";
+        document.getElementById("popup-zindex").style.zIndex = "-1";
+        Register_popup.style.visibility = "visible";
+        document.getElementById("popup-Register").style.zIndex = "1099";
+    }
+    document.querySelector('#form-Register a:first-of-type').onclick = function () {
+        Register_popup.style.visibility = "hidden";
+        document.getElementById("popup-Register").style.zIndex = "-1";
+        Login_popup.style.visibility = "visible";
+        document.getElementById("popup-zindex").style.zIndex = "1000";
+    }
+
+</script>
+<script src="https://web8802.com/wp-content/themes/hienads/assets/js/quanhuyen.js"></script>
+<script>
+    if (address_2 = localStorage.getItem('address_2_saved')) {
+
+        $('select[name="calc_shipping_district"] option').each(function () {
+
+            if ($(this).text() == address_2) {
+
+                $(this).attr('selected', '')
+
+            }
+
+        })
+
+        $('input.billing_address_2').attr('value', address_2)
+
+    }
+
+    if (district = localStorage.getItem('district')) {
+
+        $('select[name="calc_shipping_district"]').html(district)
+
+        $('select[name="calc_shipping_district"]').on('change', function () {
+
+            var target = $(this).children('option:selected')
+
+            target.attr('selected', '')
+
+            $('select[name="calc_shipping_district"] option').not(target).removeAttr('selected')
+
+            address_2 = target.text()
+
+            $('input.billing_address_2').attr('value', address_2)
+
+            district = $('select[name="calc_shipping_district"]').html()
+
+            localStorage.setItem('district', district)
+
+            localStorage.setItem('address_2_saved', address_2)
+
+        })
+
+    }
+
+    $('select[name="calc_shipping_provinces"]').each(function () {
+
+        var $this = $(this),
+
+            stc = ''
+
+        c.forEach(function (i, e) {
+
+            e += +1
+
+            stc += '<option value=' + e + '>' + i + '</option>'
+
+            $this.html('<option value="">Tỉnh / Thành phố</option>' + stc)
+
+            if (address_1 = localStorage.getItem('address_1_saved')) {
+
+                $('select[name="calc_shipping_provinces"] option').each(function () {
+
+                    if ($(this).text() == address_1) {
+
+                        $(this).attr('selected', '')
+
+                    }
+
+                })
+
+                $('input.billing_address_1').attr('value', address_1)
+
+            }
+
+            $this.on('change', function (i) {
+
+                i = $this.children('option:selected').index() - 1
+
+                var str = '',
+
+                    r = $this.val()
+
+                if (r != '') {
+
+                    arr[i].forEach(function (el) {
+
+                        str += '<option value="' + el + '">' + el + '</option>'
+
+                        $('select[name="calc_shipping_district"]').html('<option value="">Quận / Huyện</option>' + str)
+
+                    })
+
+                    var address_1 = $this.children('option:selected').text()
+
+                    var district = $('select[name="calc_shipping_district"]').html()
+
+                    localStorage.setItem('address_1_saved', address_1)
+
+                    localStorage.setItem('district', district)
+
+                    $('select[name="calc_shipping_district"]').on('change', function () {
+
+                        var target = $(this).children('option:selected')
+
+                        target.attr('selected', '')
+
+                        $('select[name="calc_shipping_district"] option').not(target).removeAttr('selected')
+
+                        var address_2 = target.text()
+
+                        $('input.billing_address_2').attr('value', address_2)
+
+                        district = $('select[name="calc_shipping_district"]').html()
+
+                        localStorage.setItem('district', district)
+
+                        localStorage.setItem('address_2_saved', address_2)
+
+                    })
+
+                } else {
+
+                    $('select[name="calc_shipping_district"]').html('<option value="">Quận / Huyện</option>')
+
+                    district = $('select[name="calc_shipping_district"]').html()
+
+                    localStorage.setItem('district', district)
+
+                    localStorage.removeItem('address_1_saved', address_1)
+
+                }
+
+            })
+
+        })
+
+    })
+
+</script>
+<script>
+    var selectprovincesOBJ = document.querySelector('.select-provinces');
+    var addStr = "<option value='gan-toi'>(Gần tôi)</option>"+"<option value='search-by-text'>(Search by text)</option>";
+    selectprovincesOBJ.innerHTML =addStr+selectprovincesOBJ.innerHTML;
+    var searchButton = document.querySelector('.search-btn');
+
+    var latitude;
+    var longitude;
+    function successCallback(position) {
+        latitude = position.coords.latitude;
+        longitude = position.coords.longitude;
+        console.log("Latitude: " + latitude);
+        console.log("Longitude: " + longitude);
+    }
+
+    function errorCallback(error) {
+        console.log("Error occurred. Error code: " + error.code);
+    }
+    selectprovincesOBJ.addEventListener('change', function () {
+        if (selectprovincesOBJ.value.localeCompare("gan-toi") == 0){
+            if (navigator.geolocation) {
+                navigator.geolocation.getCurrentPosition(successCallback, errorCallback);
+            } else {
+                console.log("Geolocation is not supported by this browser.");
+            }
+        }
+    });
+    searchButton.addEventListener('click', function () {
+        var search_by_text = document.querySelector('.search-box input').value;
+        var Select = document.querySelector('.select-provinces').value;
+        var NgayNhanPhong = document.querySelector('input[type="date"][placeholder="Ngay-nhan-phong"]').value;
+        var NgayTraPhong = document.querySelector('input[type="date"][placeholder="Ngay-tra-phong"]').value;
+        var SoNguoiLon = document.querySelector('.hop input[type="number"]').value;
+        var SoTreEm = document.querySelector('.book .hop:nth-child(4) input').value;
+        var TinhOrTp = "";
+        
+        if (Number.isNaN(parseInt(Select))) {
+            if (Select.localeCompare("gan-toi") == 0) {
+                if (latitude === undefined) {
+                    TinhOrTp = "Ho Chi Minh City";
+                }
+                else
+                {
+                    TinhOrTp = latitude+'location'+longitude;
+                }
+            }
+            else if (Select.localeCompare("search-by-text") == 0) {
+                TinhOrTp = search_by_text;
+            }
+            else {
+                TinhOrTp = "Ho Chi Minh City";
+            }
+        }
+        else {
+            TinhOrTp = document.querySelector('.select-provinces option:nth-child(' + (parseInt(Select) + 3) + ')').innerHTML;
+        }
+        window.location = Jsdomain + '/Home/GetHotels/' + search_by_text + ';' + NgayNhanPhong + ';' + NgayTraPhong + ';' + SoNguoiLon + ';' + SoTreEm + ';' + TinhOrTp;
+
+    });
+
+</script>

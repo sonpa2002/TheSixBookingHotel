@@ -1,0 +1,227 @@
+﻿@model List<Booking>
+
+@{
+    ViewData["Title"] = "Booking List";
+    Layout = "~/Views/Shared/GetHotels_Layout.cshtml";
+}
+<link rel="stylesheet" href="~/css/popUp.css" />
+<link rel="stylesheet" href="~/css/searchbeauty.css" />
+<script type="text/javascript">
+        function showPopup() {
+            document.getElementById("popup").style.display = "block";
+        }
+
+        function hidePopup() {
+            document.getElementById("popup").style.display = "none";
+        }
+        function thongbao(noidungthongbao) {
+            document.getElementById('noidungthongbao').innerHTML = noidungthongbao;
+            showPopup();
+        }
+    </script>
+<style>
+    .booking-list-container {
+        display: flex;
+        flex-direction: column;
+        align-items: center;
+        padding-top: 20px;
+        padding-bottom: 20px;
+        width:100%;
+        overflow-x:scroll;
+        z-index: 21;
+        position: relative;
+    }
+
+    .booking-list-title {
+        color: #7fc142;
+        font-size: 45px;
+        margin: 25px;
+        font-weight: 600;
+    }
+
+    .booking-list-table {
+        width: 100%;
+        border-collapse: collapse;
+        margin: 0 auto;
+    }
+
+    .booking-list-table th,
+    .booking-list-table td {
+        padding: 10px;
+        text-align: left;
+        border-bottom: 1px solid #ccc;
+    }
+
+    .booking-list-table th {
+        background-color: #4CAF50;
+        color: white;
+    }
+
+    .booking-list-table tbody tr:nth-child(even) {
+        background-color: #f9f9f9;
+    }
+
+    .booking-list-table tbody tr:hover {
+        background-color: #f5f5f5;
+    }
+
+    .booking-list-button {
+        display: inline-block;
+        padding: 8px 12px;
+        background-color: #4CAF50;
+        color: white;
+        text-align: center;
+        font-size: 14px;
+        cursor: pointer;
+        border: none;
+        border-radius: 4px;
+        transition: background-color 0.3s ease;
+    }
+
+    .booking-list-button:hover {
+        background-color: #45a049;
+    }
+</style>
+<div class="BeautySearchBackground">
+</div>
+<div class="BeautySearch">
+    <input type="text" placeholder="Search...">
+    <div class="search"></div>
+</div>
+<div class="booking-list-container">
+    <h1 class="booking-list-title">Booking List</h1>
+    <table class="booking-list-table">
+        <thead>
+            <tr>
+                <th style="min-width:15vw;">Booking ID</th>
+                <th>Hotel Name</th>
+                <th style="min-width:30vw;">Hotel Address</th>
+                <th>Booking Date</th>
+                <th>Customer Name</th>
+                <th>Customer Email</th>
+                <th>Check-In Date</th>
+                <th>Check-Out Date</th>
+                <th>Room Type</th>
+                <th>Room Number</th>
+                <th>Total Guests</th>
+                <th>Payment Method</th>
+                <th>Total Amount</th>
+                <th>Booking Status</th>
+            </tr>
+        </thead>
+        <tbody>
+            @foreach (var booking in Model)
+            {
+                <tr>
+                    <td>@booking.BookingID</td>
+                    <td>@booking.HotelName</td>
+                    <td>@booking.HotelAddress</td>
+                    <td>@booking.BookingDate.ToString("g")</td>
+                    <td>@booking.CustomerName</td>
+                    <td>@booking.CustomerEmail</td>
+                    <td>@booking.CheckInDate.ToShortDateString()</td>
+                    <td>@booking.CheckOutDate.ToShortDateString()</td>
+                    <td>@booking.RoomType</td>
+                    <td>@booking.RoomNumber</td>
+                    <td>@booking.NumberAdults ; @booking.NumberChildren</td>
+                    <td>@booking.PaymentMethod</td>
+                    <td>@booking.TotalAmount$</td>
+                    <td>@booking.BookingStatus</td>
+                    @*"bookingID": "6eb4f744-bde9-42cd-b04f-5ff3e047015e",
+                "customerName": "Hieu",
+                "customeID": "e66f1235-8275-4e89-8ade-eec91e67ee6d",
+                "customerEmail": "Hieu@gmail.com",
+                "customerPhone": "7482364782",
+                "hotelName": "Petrosetco Hotel",
+                "hotelAddress": "12 Tr\u01B0\u01A1ng C\u00F4ng \u0110\u1ECBnh, Ph\u01B0\u1EDDng 2, Th\u00E0nh ph\u1ED1 V\u0169ng T\u1EA7u, B\u00E0 R\u1ECBa - V\u0169ng T\u00E0u 78206, Vietnam",
+                "bookingDate": "2023-06-24T08:58:11.0971873",
+                "checkInDate": "2023-06-24T00:00:00",
+                "checkOutDate": "2023-06-25T00:00:00",
+                "roomType": "Suite",
+                "roomNumber": "11",
+                "numberAdults": 1,
+                "numberChildren": 0,
+                "paymentMethod": "Payment-upon-checkin",
+                "totalAmount": 61.74,
+                "bookingStatus":*@
+                </tr>
+            }
+        </tbody>
+    </table>
+</div>
+<div id="popup">
+    <div id="popup-content">
+        <div id="close" onclick="hidePopup()">&times;</div>
+        <label class="iconlabaido">&hearts;</label>
+        <label class="iconlabaiden">&clubs;</label>
+        <h2 style="display: inline">Thông báo </h2>
+        <label class="iconlabaido">&diams;</label>
+        <label class="iconlabaiden">&spades;</label>
+        <p id="noidungthongbao">Đây là nội dung của thông báo.</p>
+    </div>
+</div>
+<script>
+    var searchbtn=document.querySelector(".BeautySearch input");
+    var BeautySearchBackgroundOBJ = document.querySelector(".BeautySearchBackground");
+    var searchbeautyOBJ = document.querySelector(".BeautySearch");
+    //BeautySearchBackgroundOBJ.style.removeProperty("background");
+    //searchbeautyOBJ.style.removeProperty("background");
+    //searchbtn.addEventListener('click', function () {
+    //    alert("ok");
+    //    BeautySearchBackgroundOBJ.style.backgroundColor = "#252525";
+    //    searchbeautyOBJ.style.backgroundColor = "#252525";
+    //});
+    searchbtn.addEventListener('keydown', function (event) {
+        if (event.keyCode === 13) {
+            if (searchbtn.value=="") {
+                thongbao("\nVui lòng nhập dữ liệu trước khi tìm kiếm.");
+            }
+            else
+            {
+                var data = {
+                    SearchString: searchbtn.value
+                };
+                // Gửi yêu cầu AJAX đến API
+                fetch('/Booking/GetBookingsWithRole', {
+                    method: 'POST',
+                    headers: {
+                        'Content-Type': 'application/json'
+                    },
+                    body: JSON.stringify(data)
+                })
+                .then(response => {
+                    if (!response.ok) {
+                        if (response.status === 401) {
+                            console.log('Lỗi 401: Unauthorized');
+                            thongbao("\nTài khoản bạn không có quyền thực hiện thao tác này.");
+                        } else {
+                                var errorMessage = JSON.parse(response.responseText).message;
+                            thongbao("<br/>" + errorMessage);
+                        }
+                    } else {
+                        // Xử lý kết quả truy vấn thành công ở đây
+                        return response.json();
+                    }
+                })
+                .then(data => {
+                    if (data.length>0)
+                    {
+                            var KetQua = '<thead>< tr ><th style="min-width:15vw;" > Booking ID </th><th > Hotel Name < /th>< th style = "min-width:30vw;" > Hotel Address < /th>< th > Booking Date < /th>< th > Customer Name < /th>< th > Customer Email < /th>< th > Check - In Date < /th>< th > Check - Out Date < /th>< th > Room Type < /th>< th > Room Number < /th>< th > Total Guests < /th>< th > Payment Method < /th>< th > Total Amount < /th>< th > Booking Status < /th>< /tr>< /thead>< tbody ><tr>';
+                        for (var i = 0; i < data.length;i++)
+                        {
+                                KetQua += '<td>' + data[i].bookingID + '</td>';
+                                KetQua += '<td>' + data[i].hotelName + '</td>';
+                        }
+                    }
+                    else
+                    {
+                        thongbao("\nKhông tìm thấy bất kỳ kết quả nào phù hợp :(");
+                    }
+                })
+                .catch(error => {
+                        thongbao("\nLỗi không gửi được truy vấn. Vui lòng tải lại trang và thử lại.");
+                });
+            }
+        }
+    });
+</script>
