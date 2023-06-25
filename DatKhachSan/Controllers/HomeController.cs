@@ -58,7 +58,7 @@ namespace DatKhachSan.Controllers
                 string[] Location= search_infor[search_infor.Length - 1].Split("location");
                 apiUrl = "https://maps.googleapis.com/maps/api/place/nearbysearch/json";
                 string ViTri = Location[0] + "," + Location[1];
-                string radius = "10000"; 
+                string radius = "5000"; 
                 string type = "lodging";
                 requestUrl = $"{apiUrl}?location={Uri.EscapeDataString(ViTri)}&radius={Uri.EscapeDataString(radius)}&type={Uri.EscapeDataString(type)}&key={_apiKey}";
             }

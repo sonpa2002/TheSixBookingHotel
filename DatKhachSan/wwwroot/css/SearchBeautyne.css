@@ -143,8 +143,11 @@
     transform: rotate(-45deg);
 }
 
-        .BeautySearch input::placeholder {
-            color: white;
-            opacity: 0.5;
-            font-weight: bolder;
-        }
+    .BeautySearch input::placeholder {
+        color: white;
+        opacity: 0.5;
+        font-weight: bolder;
+    }
+    .BeautySearch:focus-within {
+        background: #252525;
+    }

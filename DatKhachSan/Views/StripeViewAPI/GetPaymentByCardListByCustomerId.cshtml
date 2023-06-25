@@ -1,0 +1,242 @@
+﻿@model List<PaymentByCard>
+
+@{
+    ViewData["Title"] = "PaymentByCard List";
+    Layout = "~/Views/Shared/StripeViewAPI_Layout.cshtml";
+}
+<link rel="stylesheet" href="~/css/popUp.css" />
+<link rel="stylesheet" href="~/css/searchbeautyne.css" />
+<script type="text/javascript">
+    function showPopup() {
+        document.getElementById("popup").style.display = "block";
+    }
+
+    function hidePopup() {
+        document.getElementById("popup").style.display = "none";
+    }
+    function thongbao(noidungthongbao) {
+        document.getElementById('noidungthongbao').innerHTML = noidungthongbao;
+        showPopup();
+    }
+</script>
+<style>
+    .PaymentByCard-list-container {
+        display: flex;
+        flex-direction: column;
+        align-items: center;
+        padding-top: 20px;
+        padding-bottom: 20px;
+        width: 100vw;
+        overflow-y: scroll;
+        z-index: 21;
+        position: relative;
+        height:65vh;
+    }
+
+    .PaymentByCard-list-title {
+        color: #7fc142;
+        font-size: 45px;
+        margin: 14px 0 36px;
+        font-weight: 600;
+    }
+
+    .PaymentByCard-list-table {
+        width: 100%;
+        border-collapse: collapse;
+        margin: 0 auto;
+    }
+
+        .PaymentByCard-list-table th,
+        .PaymentByCard-list-table td {
+            padding: 10px;
+            text-align: left;
+            border-bottom: 1px solid #ccc;
+        }
+
+        .PaymentByCard-list-table th {
+            background-color: #4CAF50;
+            color: white;
+        }
+
+        .PaymentByCard-list-table tbody tr:nth-child(even) {
+            background-color: #f9f9f9;
+        }
+
+        .PaymentByCard-list-table tbody tr:hover {
+            background-color: #f5f5f5;
+        }
+
+    .PaymentByCard-list-button {
+        display: inline-block;
+        padding: 8px 12px;
+        background-color: #4CAF50;
+        color: white;
+        text-align: center;
+        font-size: 14px;
+        cursor: pointer;
+        border: none;
+        border-radius: 4px;
+        transition: background-color 0.3s ease;
+    }
+
+        .PaymentByCard-list-button:hover {
+            background-color: #45a049;
+        }
+
+    .PaymentByCard-list-container tbody {
+        background-color: white;
+    }
+
+    .BeautySearchBackground {
+        left: 0;
+        right: 0;
+        top: 0;
+        height: 65.4vh;
+        width: 100%;
+    }
+
+    .BeautySearch {
+        position: absolute;
+        margin: 0;
+        top: 1.4vh;
+        right: 3vw;
+        width: 300px;
+        height: 100px;
+        z-index: 22;
+    }
+    .BeautySearch:focus-within {
+        background:none;
+    }
+</style>
+@if (User.IsInRole("Manager") || User.IsInRole("Admin"))
+{
+    <div class="BeautySearchBackground">
+    </div>
+    <div class="BeautySearch">
+        <input type="text" placeholder="Search...">
+        <div class="search"></div>
+    </div>
+}
+<div class="PaymentByCard-list-container">
+    <h1 class="PaymentByCard-list-title">Visa Pay List</h1>
+    <table class="PaymentByCard-list-table">
+        <thead>
+            <tr>
+                <th>Payment-ID</th>
+                <th>Customer-PayID</th>
+                <th>Customer Name</th>
+                <th>Customer Email</th>
+                <th>Pay-For-ID</th>
+                <th>Card Number</th>
+                <th>Payment Date</th>
+                <th>TotalAmount</th>
+                <th>Payment Description</th>
+                <th>Payment Status</th>
+            </tr>
+        </thead>
+        <tbody>
+            @foreach (var paymentbycard in Model)
+            {
+                <tr>
+                    <td>@paymentbycard.PaymentID</td>
+                    <td>@paymentbycard.CustomerPayID</td>
+                    <td>@paymentbycard.CustomerName</td>
+                    <td>@paymentbycard.CustomerEmail</td>
+                    <td>@paymentbycard.PayForID</td>
+                    <td>@paymentbycard.CardNumber</td>
+                    <td>@paymentbycard.PaymentDate.ToString("g")</td>
+                    <td>@paymentbycard.TotalAmount$</td>
+                    <td>@paymentbycard.PaymentDescription</td>
+                    <td>@paymentbycard.PaymentStatus</td>
+
+                </tr>
+            }
+        </tbody>
+    </table>
+</div>
+<div id="popup">
+    <div id="popup-content">
+        <div id="close" onclick="hidePopup()">&times;</div>
+        <label class="iconlabaido">&hearts;</label>
+        <label class="iconlabaiden">&clubs;</label>
+        <h2 style="display: inline">Thông báo </h2>
+        <label class="iconlabaido">&diams;</label>
+        <label class="iconlabaiden">&spades;</label>
+        <p id="noidungthongbao">Đây là nội dung của thông báo.</p>
+    </div>
+</div>
+
+<script>
+    var searchbtn = document.querySelector(".BeautySearch input");
+    var BeautySearchBackgroundOBJ = document.querySelector(".BeautySearchBackground");
+    var searchbeautyOBJ = document.querySelector(".BeautySearch");
+
+    searchbtn.addEventListener('keydown', function (event) {
+        if (event.keyCode === 13) {
+            searchbtn.blur();
+            if (searchbtn.value == "") {
+                thongbao("\nVui lòng nhập dữ liệu trước khi tìm kiếm.");
+            }
+            else {
+                $.ajax({
+                    url: "/StripeViewAPI/GetPaymentByCardsWithRole",
+                    type: "POST",
+                    data: {
+                        SearchString: searchbtn.value
+                    },
+                    success: function (response) {
+                        // Xử lý phản hồi thành công
+                        var data = response;
+                        if (data.length > 0) {
+                            var KetQua = '<thead><tr><th>Payment-ID</th><th>Customer-PayID</th><th>CustomerName</th><th>Customer Email</th><th>Pay-For-ID</th><th>Card Number</th><th>Payment Date</th><th>Total Amount</th><th>Payment Description</th><th>Payment Status</th></tr></thead><tbody>';
+                            for (var i = 0; i < data.length; i++) {
+                                KetQua += '<tr><td>' + data[i].paymentID + '</td>';
+                                KetQua += '<td>' + data[i].customerPayID + '</td>';
+                                KetQua += '<td>' + data[i].customerName + '</td>';
+                                KetQua += '<td>' + data[i].customerEmail + '</td>';
+                                KetQua += '<td>' + data[i].payForID + '</td>';
+                                KetQua += '<td>' + data[i].cardNumber + '</td>';
+                                KetQua += '<td>' + data[i].paymentDate + '</td>';
+                                KetQua += '<td>' + data[i].totalAmount + '$' + '</td>';
+                                KetQua += '<td>' + data[i].paymentDescription + '</td>';
+                                KetQua += '<td>' + data[i].paymentStatus + '</td></tr>';
+                            }
+                            KetQua += '</tbody>';
+                            document.querySelector('.PaymentByCard-list-table').innerHTML = KetQua;
+                            thongbao("<br/>Yeah! Có " + data.length + " Kết quả được tìm thấy.");
+                        }
+                        else {
+                            thongbao("\nKhông tìm thấy bất kỳ kết quả nào phù hợp :(");
+                            var KetQua = '<thead><tr><th>Payment-ID</th><th>Customer-PayID</th><th>CustomerName</th><th>Customer Email</th><th>Pay-For-ID</th><th>Card Number</th><th>Payment Date</th><th>Total Amount</th><th>Payment Description</th><th>Payment Status</th></tr></thead><tbody>';
+                            KetQua += '</tbody>';
+                            document.querySelector('.PaymentByCard-list-table').innerHTML = KetQua;
+                        }
+                    },
+                    error: function (xhr) {
+                        if (xhr.status === 401) {
+                            thongbao("<br/>Xin lỗi! Bạn không có quyền thao tác chức năng này :(");
+                        } else {
+                            if (xhr.responseJSON.message != null && xhr.responseJSON.message != "") {
+                                thongbao("<br/>" + xhr.responseJSON.message);
+                            }
+                            else {
+                                thongbao("<br/>Lỗi không gửi được truy vấn. Vui lòng tải lại trang và thử lại.");
+                            }
+                        }
+                    }
+                });
+            }
+        }
+    });
+</script>
+<script>
+    searchbtn.addEventListener('focus', function () {
+        BeautySearchBackgroundOBJ.style.backgroundColor = '#252525';
+        document.querySelector('.PaymentByCard-list-table').style.visibility = "hidden";
+    });
+
+    searchbtn.addEventListener('blur', function () {
+        BeautySearchBackgroundOBJ.style.backgroundColor = '';
+        document.querySelector('.PaymentByCard-list-table').style.visibility = "visible";
+    });
+</script>

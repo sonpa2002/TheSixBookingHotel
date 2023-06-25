@@ -50,6 +50,11 @@
                             <li><a href="#"><i class="fas fa-user"></i> Hồ sơ</a></li>
                             <li><a href="@Url.Action("GetBookingsByCustomerId", "Booking")"><i class="fas fa-file-alt"></i> Lịch sử</a></li>
                             <li><a href=" @Url.Action("Logout", "Account")"><i class="fas fa-sign-out-alt"></i> Đăng xuất</a></li>
+                            @if (User.IsInRole("Admin") || User.IsInRole("Manager"))
+                            {
+                                <li><a href=" @Url.Action("GetReportList", "Booking")"><i class="fas fa-comment"></i>Phản hồi</a></li>
+                            }
+                            <li><a href=" @Url.Action("GetPaymentByCardListByCustomerId", "StripeViewAPI")"><i class="fa-brands fa-cc-visa"></i>Visa Pay</a></li>
                         </ul>
                     </li>
                     @*<li>
@@ -62,8 +67,37 @@
                     <li><button id="DangNhap-btn" class="primary-btn">Đăng Nhập</button></li>
                 }
             </ul>
-
             <span class="fa-solid fa-bars"></span>
+            @if (User.IsInRole("Admin"))
+            {
+                <div id="RoleView">Admin</div>
+            }
+            @if (User.IsInRole("Manager"))
+            {
+                <div id="RoleView">Manager</div>
+            }
+            @if (User.IsInRole("Partner"))
+            {
+                <div id="RoleView">Partner</div>
+            }
+            <style>
+                #RoleView {
+                    color: deeppink;
+                    position: absolute;
+                    background-color: lightgrey;
+                    width: 3.4vw;
+                    height: 2.7vw;
+                    line-height: 2.43vw;
+                    text-align: center;
+                    border-radius: 1.4vw;
+                    font-size: 0.7vw;
+                    font-weight: 800;
+                    border: solid 0.125vw deeppink;
+                    right: 30px;
+                    top: 13px;
+                    transform: rotate(-23deg);
+                }
+            </style>
         </div>
     </div>
 </header>
@@ -133,7 +167,7 @@
             else {
                 // Gửi yêu cầu đăng nhập qua AJAX
                 $.ajax({
-                    url: "/StripeViewAPI/Login", // Đường dẫn đến phương thức Login
+                    url: "/Account/Login", // Đường dẫn đến phương thức Login
                     type: "POST",
                     data: {
                         Email: username,
@@ -146,7 +180,7 @@
                         $("#err-mes").css("display", "block");
                         $("#err-mes").html("<strong>" + "Đăng nhập thành công!" + "</strong>");
                         // Thực hiện các tác vụ tiếp theo (chuyển hướng, cập nhật UI, v.v.)
-                        window.location = "@domain";
+                        location.reload(true);
                     },
                     error: function (xhr) {
                         // Xử lý phản hồi lỗi (đăng nhập không thành công)
@@ -185,7 +219,7 @@
             else {
                 // Gửi yêu cầu đăng nhập qua AJAX
                 $.ajax({
-                    url: "/StripeViewAPI/Register", // Đường dẫn đến phương thức Register
+                    url: "/Account/Register", // Đường dẫn đến phương thức Register
                     type: "POST",
                     data: {
                         Email: usernameRegister,
